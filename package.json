@@ -8,6 +8,7 @@
   "dev": "vite",
   "start": "electron .",
   "build:vite": "vite build",
+  "build:netlify": "npm run build:vite",
   "build": "npm run build:vite && electron-builder",
   "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
 },
