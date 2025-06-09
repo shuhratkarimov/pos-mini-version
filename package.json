@@ -1,14 +1,43 @@
 {
-  "name": "my-v0-project",
+  "name": "imkonqurilish",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "start": "vite start",
-    "lint": "vite lint"
+  "main": "electron-main.js",
+"scripts": {
+  "dev": "vite",
+  "start": "electron .",
+  "build:vite": "vite build",
+  "build": "npm run build:vite && electron-builder",
+  "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
+},
+"build": {
+  "appId": "com.mycompany.myapp",
+  "productName": "imkonqurilish-santexnika",
+  "files": [
+    "dist/**",
+    "electron-main.js",
+    "package.json"
+  ],
+  "directories": {
+    "buildResources": "public"
   },
+  "win": {
+    "target": "nsis",
+    "icon": "icons/icon.ico"
+    },
+  "mac": {
+    "target": "dmg",
+    "icon": "icons/icon.icns"
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "icon": "icons/icon.png"
+  }
+},
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
@@ -78,8 +107,12 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "electron": "^28.3.3",
+    "electron-builder": "^26.0.12",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^7.2.0"
   }
 }

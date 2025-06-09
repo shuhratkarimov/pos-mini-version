@@ -12,7 +12,7 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     description: "",
   })
 
-  const categories = ["Quvurlar", "Fitinglar", "Kranlar", "Sanitariya", "Asboblar", "Boshqalar"]
+  const categories = ["Quvurlar", "Fitinglar", "Kranlar", "Sanitariya", "Asboblar", "Aristonlar", "Boshqalar"]
   const units = ["dona", "metr", "kg", "litr"]
 
   useEffect(() => {
