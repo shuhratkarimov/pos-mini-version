@@ -1,88 +1,98 @@
-import productsData from "../data/products.json"
+import { db, ref, set, onValue, push, update, remove } from "../firebase";
+
+const testConnection = async () => {
+  try {
+    await set(ref(db, "testConnection"), {
+      connectedAt: new Date().toISOString(),
+      message: "Firebase Realtime DB ulandi ✅",
+    });
+    console.log("✅ Firebase bilan aloqa bor!");
+  } catch (error) {
+    console.error("❌ Firebase ulanmagan:", error);
+  }
+};
+testConnection();
+
+const productsRef = ref(db, "products");
 
 class ProductService {
-  constructor() {
-    this.products = [...productsData]
-    this.loadFromStorage()
+  // Real-time listener
+  onProductsChanged(callback) {
+    onValue(productsRef, (snapshot) => {
+      const products = [];
+      snapshot.forEach((childSnapshot) => {
+        products.push({ id: childSnapshot.key, ...childSnapshot.val() });
+      });
+      callback(products);
+    });
   }
 
-  // LocalStorage dan yuklash
-  loadFromStorage() {
-    const stored = localStorage.getItem("santexnika_products")
-    if (stored) {
-      this.products = JSON.parse(stored)
-    }
+  // Kategoriyalarni olish
+  getCategories() {
+    let categories = new Set();
+    onValue(productsRef, (snapshot) => {
+      snapshot.forEach((childSnapshot) => {
+        const product = childSnapshot.val();
+        if (product.category) {
+          categories.add(product.category);
+        }
+      });
+    });
+    return Array.from(categories);
   }
 
-  // LocalStorage ga saqlash
-  saveToStorage() {
-    localStorage.setItem("santexnika_products", JSON.stringify(this.products))
+  getAllProducts(callback) {
+    onValue(productsRef, (snapshot) => {
+      const products = [];
+      snapshot.forEach((childSnapshot) => {
+        products.push({ id: childSnapshot.key, ...childSnapshot.val() });
+      });
+      callback(products); // Callback ga mahsulotlar ro'yxatini o'tkazamiz
+    });
   }
 
-  // Barcha mahsulotlarni olish (GET)
-  getAllProducts() {
-    return [...this.products]
-  }
-
-  // ID bo'yicha mahsulot olish
-  getProductById(id) {
-    return this.products.find((product) => product.id === id)
-  }
-
-  // Yangi mahsulot qo'shish (POST)
-  addProduct(productData) {
-    const newProduct = {
-      id: Date.now().toString(),
+  // Yangi mahsulot qo'shish
+  async addProduct(productData) {
+    const newProductRef = push(productsRef);
+    await set(newProductRef, {
       ...productData,
       price: Number(productData.price),
-    }
-    this.products.push(newProduct)
-    this.saveToStorage()
-    return newProduct
+    });
+    return { id: newProductRef.key, ...productData };
   }
 
-  // Mahsulotni yangilash (PUT)
-  updateProduct(id, productData) {
-    const index = this.products.findIndex((product) => product.id === id)
-    if (index !== -1) {
-      this.products[index] = {
-        ...this.products[index],
-        ...productData,
-        price: Number(productData.price),
-      }
-      this.saveToStorage()
-      return this.products[index]
-    }
-    return null
+  // Mahsulotni yangilash
+  async updateProduct(id, productData) {
+    const productRef = ref(db, `products/${id}`);
+    await update(productRef, productData);
+    return { id, ...productData };
   }
 
-  // Mahsulotni o'chirish (DELETE)
-  deleteProduct(id) {
-    const index = this.products.findIndex((product) => product.id === id)
-    if (index !== -1) {
-      const deleted = this.products.splice(index, 1)[0]
-      this.saveToStorage()
-      return deleted
-    }
-    return null
+  // Mahsulotni o'chirish
+  async deleteProduct(id) {
+    const productRef = ref(db, `products/${id}`);
+    await remove(productRef);
+    return true;
   }
 
-  // Kategoriyalar ro'yxati
-  getCategories() {
-    const categories = [...new Set(this.products.map((p) => p.category))]
-    return ["Barchasi", ...categories]
-  }
-
-  // Qidiruv va filtr
+  // Qidiruv va filtratsiya
   searchProducts(searchTerm, category) {
-    return this.products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory = category === "Barchasi" || product.category === category
-      return matchesSearch && matchesCategory
-    })
+    let products = [];
+    onValue(productsRef, (snapshot) => {
+      snapshot.forEach((childSnapshot) => {
+        const product = { id: childSnapshot.key, ...childSnapshot.val() };
+        const matchesSearch = product.name
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const matchesCategory =
+          category === "Barchasi" || product.category === category;
+        if (matchesSearch && matchesCategory) {
+          products.push(product);
+        }
+      });
+    });
+    return products;
   }
 }
 
-export default new ProductService()
+export default new ProductService();

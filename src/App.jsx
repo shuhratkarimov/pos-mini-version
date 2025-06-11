@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Search,
   ShoppingCart,
@@ -20,24 +20,24 @@ function App() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [products, setProducts] = useState(productService.getAllProducts());
+  const [products, setProducts] = useState([]);
 
-  // Mahsulotlarni yangilash
+  useEffect(() => {
+    productService.getAllProducts(setProducts); // Callback bilan to'g'ri chaqirish
+  }, []);
+
   const refreshProducts = () => {
-    setProducts(productService.getAllProducts());
+    productService.getAllProducts(setProducts);
   };
 
-  // Kategoriyalar ro'yxati
   const categories = useMemo(() => {
-    return productService.getCategories();
+    return ["Barchasi", ...productService.getCategories()];
   }, [products]);
 
-  // Filtrlangan mahsulotlar
   const filteredProducts = useMemo(() => {
     return productService.searchProducts(searchTerm, selectedCategory);
   }, [searchTerm, selectedCategory, products]);
 
-  // Savatga qo'shish
   const addToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -67,7 +67,6 @@ function App() {
     });
   };
 
-  // Miqdorni o'zgartirish
   const updateQuantity = (id, change) => {
     setCart((prev) => {
       return prev
@@ -89,20 +88,16 @@ function App() {
     });
   };
 
-  // Savatdan o'chirish
   const removeFromCart = (id) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Savatni tozalash
   const clearCart = () => {
     setCart([]);
   };
 
-  // Umumiy summa
   const totalAmount = cart.reduce((sum, item) => sum + item.total, 0);
 
-  // Chek yaratish
   const generateReceipt = () => {
     if (cart.length === 0) return;
 
@@ -117,35 +112,29 @@ function App() {
     setShowReceipt(true);
   };
 
-  // Chek chop etish
   const printReceipt = () => {
     window.print();
   };
 
-  // Yangi savdo
   const newSale = () => {
     setCart([]);
     setShowReceipt(false);
     setCurrentReceipt(null);
   };
 
-  // Admin panelni ko'rsatish
   const handleShowAdmin = () => {
     setShowAdmin(true);
   };
 
-  // Admin paneldan chiqish
   const handleBackFromAdmin = () => {
     setShowAdmin(false);
     refreshProducts();
   };
 
-  // Admin panel
   if (showAdmin) {
-    return <AdminPanel onBack={handleBackFromAdmin} />;
+    return <AdminPanel onBack={handleBackFromAdmin} refreshProducts={refreshProducts} />;
   }
 
-  // Chek ko'rinishi
   if (showReceipt && currentReceipt) {
     return (
       <div className="min-h-screen bg-gray-100 p-4">
@@ -158,15 +147,11 @@ function App() {
 
           <div className="border-t border-b border-gray-300 py-4 mb-4">
             {currentReceipt.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-center mb-2"
-              >
+              <div key={item.id} className="flex justify-between items-center mb-2">
                 <div className="flex-1">
                   <p className="font-medium text-sm">{item.name}</p>
                   <p className="text-xs text-gray-500">
-                    {item.quantity} {item.unit} × {item.price.toLocaleString()}{" "}
-                    so'm
+                    {item.quantity} {item.unit} × {item.price.toLocaleString()} so'm
                   </p>
                 </div>
                 <p>{item.total.toLocaleString()} so'm</p>
@@ -175,13 +160,11 @@ function App() {
           </div>
 
           <div className="text-center mb-6">
-            <p className="text-xl">
-              JAMI: {currentReceipt.total.toLocaleString()} so'm
-            </p>
+            <p className="text-xl">JAMI: {currentReceipt.total.toLocaleString()} so'm</p>
           </div>
           <div>
-          <p className="text-center" style={{marginBottom: "5px"}}>Xaridingiz uchun rahmat!</p>
-          <p className="text-center" style={{marginBottom: "20px"}}>Tel: +998 88 655 88 58</p>
+            <p className="text-center" style={{ marginBottom: "5px" }}>Xaridingiz uchun rahmat!</p>
+            <p className="text-center" style={{ marginBottom: "20px" }}>Tel: +998 88 655 88 58</p>
           </div>
 
           <div className="flex gap-2 no-print">
@@ -204,15 +187,14 @@ function App() {
     );
   }
 
-  // Asosiy POS interfeysi
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-center text-blue-600">
-              <img src="favicon.png" alt="logo" style={{display: "inline", marginRight: "30px"}}/>
-            DO'KONINING SANTEXNIKA MOLLARI QISMI
+              <img src="favicon.png" alt="logo" style={{ display: "inline", marginRight: "30px" }} />
+              DO'KONINING SANTEXNIKA MOLLARI QISMI
             </h1>
             <button
               onClick={handleShowAdmin}
@@ -223,7 +205,6 @@ function App() {
             </button>
           </div>
 
-          {/* Qidiruv va filtr */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
               <Search
@@ -253,7 +234,6 @@ function App() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Mahsulotlar ro'yxati */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-bold mb-4">
@@ -266,19 +246,13 @@ function App() {
                     className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => addToCart(product)}
                   >
-                    <h2 className="font-semibold text-xl mb-2">
-                      {product.name}
-                    </h2>
-                    <p className="text-l text-gray-600 mb-2">
-                      {product.category}
-                    </p>
+                    <h2 className="font-semibold text-xl mb-2">{product.name}</h2>
+                    <p className="text-l text-gray-600 mb-2">{product.category}</p>
                     <p className="text-xl font-bold text-blue-600">
                       {product.price.toLocaleString()} so'm/{product.unit}
                     </p>
                     {product.description && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {product.description}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{product.description}</p>
                     )}
                   </div>
                 ))}
@@ -286,7 +260,6 @@ function App() {
             </div>
           </div>
 
-          {/* Savat */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
               <div className="flex items-center justify-between mb-4">
@@ -306,10 +279,7 @@ function App() {
 
               <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
                 {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border border-gray-200 rounded-lg p-3"
-                  >
+                  <div key={item.id} className="border border-gray-200 rounded-lg p-3">
                     <h4 className="font-medium text-sm mb-2">{item.name}</h4>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -324,10 +294,7 @@ function App() {
                           min="1"
                           value={item.quantity}
                           onChange={(e) => {
-                            const newQuantity = Math.max(
-                              1,
-                              parseInt(e.target.value)
-                            );
+                            const newQuantity = Math.max(1, parseInt(e.target.value));
                             setCart((prev) =>
                               prev.map((cartItem) =>
                                 cartItem.id === item.id
@@ -360,20 +327,18 @@ function App() {
                       {item.price.toLocaleString()} so'm/{item.unit}
                     </p>
                     <p className="font-bold text-blue-600">
-                    {item.total? `JAMI: ${item.total?.toLocaleString()} so'm`: "Hali qiymat kiritilmadi"} 
+                      {item.total ? `JAMI: ${item.total.toLocaleString()} so'm` : "Hali qiymat kiritilmadi"}
                     </p>
                   </div>
                 ))}
               </div>
-              {cart.length === 0 && (
-                <p className="text-gray-500 text-center py-8">Savat bo'sh</p>
-              )}
+              {cart.length === 0 && <p className="text-gray-500 text-center py-8">Savat bo'sh</p>}
 
               {cart.length > 0 && (
                 <>
                   <div className="border-t pt-4 mb-4">
                     <p className="text-xl font-bold text-center">
-                    {totalAmount? `JAMI: ${totalAmount?.toLocaleString()} so'm`: "Hali qiymat kiritilmadi"} 
+                      {totalAmount ? `JAMI: ${totalAmount.toLocaleString()} so'm` : "Hali qiymat kiritilmadi"}
                     </p>
                   </div>
                   <button

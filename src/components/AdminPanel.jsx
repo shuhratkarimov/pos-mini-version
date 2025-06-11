@@ -1,18 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react"
-import ProductForm from "./ProductForm"
-import productService from "../services/productService"
+// AdminPanel.jsx
+import { useEffect, useState } from "react";
+import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import ProductForm from "./ProductForm";
+import productService from "../services/productService";
 
-const AdminPanel = ({ onBack }) => {
-  const [products, setProducts] = useState(productService.getAllProducts())
-  const [showForm, setShowForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
+const AdminPanel = ({ onBack, refreshProducts }) => {
+  const [productData, setProductData] = useState({
+    name: "",
+    category: "",
+    price: "",
+    unit: "",
+    description: "",
+  });
+  const [products, setProducts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
-  const refreshProducts = () => {
-    setProducts(productService.getAllProducts())
-  }
+  useEffect(() => {
+    productService.onProductsChanged(setProducts);
+  }, []);
 
   const handleAddProduct = () => {
     setEditingProduct(null)
@@ -24,23 +32,22 @@ const AdminPanel = ({ onBack }) => {
     setShowForm(true)
   }
 
-  const handleDeleteProduct = (product) => {
+  const handleDeleteProduct = async (product) => {
     if (window.confirm(`"${product.name}" mahsulotini o'chirishni xohlaysizmi?`)) {
-      productService.deleteProduct(product.id)
+      await productService.deleteProduct(product.id)
       refreshProducts()
     }
   }
 
-  const handleSaveProduct = (productData) => {
-    if (editingProduct) {
-      productService.updateProduct(editingProduct.id, productData)
-    } else {
-      productService.addProduct(productData)
+  const handleSaveProduct = async () => {
+    try {
+      await productService.addProduct(productData);
+      if (refreshProducts) refreshProducts();
+      setProductData({ name: "", category: "", price: "", unit: "", description: "" });
+    } catch (error) {
+      console.error("Mahsulot saqlashda xato:", error);
     }
-    refreshProducts()
-    setShowForm(false)
-    setEditingProduct(null)
-  }
+  };
 
   const handleCancelForm = () => {
     setShowForm(false)

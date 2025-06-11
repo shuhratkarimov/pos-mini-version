@@ -4,41 +4,41 @@
   "private": true,
   "type": "module",
   "main": "electron-main.js",
-"scripts": {
-  "dev": "vite",
-  "start": "electron .",
-  "build:vite": "vite build",
-  "build:netlify": "npm run build:vite",
-  "build": "npm run build:vite && electron-builder",
-  "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
-},
-"build": {
-  "appId": "com.mycompany.myapp",
-  "productName": "imkonqurilish-santexnika",
-  "files": [
-    "dist/**",
-    "electron-main.js",
-    "package.json"
-  ],
-  "directories": {
-    "buildResources": "public"
+  "scripts": {
+    "dev": "vite",
+    "start": "electron .",
+    "build:vite": "vite build",
+    "build:netlify": "npm run build:vite",
+    "build": "npm run build:vite && electron-builder",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
   },
-  "win": {
-    "target": "nsis",
-    "icon": "icons/icon.ico"
-    },
-  "mac": {
-    "target": "dmg",
-    "icon": "icons/icon.icns"
-  },
-  "linux": {
-    "target": [
-      "AppImage",
-      "deb"
+  "build": {
+    "appId": "com.mycompany.myapp",
+    "productName": "imkonqurilish-santexnika",
+    "files": [
+      "dist/**",
+      "electron-main.js",
+      "package.json"
     ],
-    "icon": "icons/icon.png"
-  }
-},
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icons/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icons/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "icons/icon.png"
+    }
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
@@ -75,6 +75,7 @@
     "cmdk": "1.0.4",
     "date-fns": "^2.30.0",
     "embla-carousel-react": "8.5.1",
+    "firebase": "^11.9.1",
     "fs": "latest",
     "input-otp": "1.4.1",
     "jiti": "latest",
