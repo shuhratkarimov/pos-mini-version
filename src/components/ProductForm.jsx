@@ -28,13 +28,13 @@ const ProductForm = ({ product, onSave, onCancel }) => {
   }, [product])
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.name || !formData.category || !formData.price || !formData.unit) {
-      alert("Barcha majburiy maydonlarni to'ldiring!")
-      return
+      alert("Barcha majburiy maydonlarni to'ldiring!");
+      return;
     }
-    onSave(formData)
-  }
+    onSave(formData);
+  };
 
   const handleChange = (e) => {
     setFormData({

@@ -1,17 +1,8 @@
-"use client";
-
-import { useState, useEffect, useMemo } from "react";
-import {
-  Search,
-  ShoppingCart,
-  Printer,
-  Trash2,
-  Plus,
-  Minus,
-  Settings,
-} from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, ShoppingCart, Printer, Trash2, Plus, Minus, Settings } from "lucide-react";
 import productService from "./services/productService";
 import AdminPanel from "./components/AdminPanel";
+import ErrorBoundary from "./components/ErrorBoundary"; // ErrorBoundary faylini import qiling
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,13 +12,22 @@ function App() {
   const [currentReceipt, setCurrentReceipt] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    productService.getAllProducts(setProducts); // Callback bilan to'g'ri chaqirish
+    setLoading(true);
+    productService.getAllProducts((fetchedProducts) => {
+      setProducts(fetchedProducts);
+      setLoading(false);
+    });
   }, []);
 
   const refreshProducts = () => {
-    productService.getAllProducts(setProducts);
+    setLoading(true);
+    productService.getAllProducts((fetchedProducts) => {
+      setProducts(fetchedProducts);
+      setLoading(false);
+    });
   };
 
   const categories = useMemo(() => {
@@ -188,6 +188,7 @@ function App() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -239,27 +240,33 @@ function App() {
               <h2 className="text-xl font-bold mb-4">
                 Mahsulotlar ({filteredProducts.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => addToCart(product)}
-                  >
-                    <h2 className="font-semibold text-xl mb-2">{product.name}</h2>
-                    <p className="text-l text-gray-600 mb-2">{product.category}</p>
-                    <p className="text-xl font-bold text-blue-600">
-                      {product.price.toLocaleString()} so'm/{product.unit}
-                    </p>
-                    {product.description && (
-                      <p className="text-xs text-gray-500 mt-1">{product.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <p className="text-gray-500 text-center py-4">Yuklanmoqda...</p>
+              ) : filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {filteredProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => addToCart(product)}
+                    >
+                      <h2 className="font-semibold text-xl mb-2">{product.name || 'Noma\'lum mahsulot'}</h2>
+                      <p className="text-l text-gray-600 mb-2">{product.category || 'Kategoriya yo\'q'}</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {product.price ? `${product.price.toLocaleString()} so'm/${product.unit || 'dona'}` : 'Narx yo\'q'}
+                      </p>
+                      {product.description && (
+                        <p className="text-xs text-gray-500 mt-1">{product.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">Mahsulotlar topilmadi</p>
+              )}
             </div>
           </div>
-
+          
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
               <div className="flex items-center justify-between mb-4">
@@ -354,6 +361,7 @@ function App() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 

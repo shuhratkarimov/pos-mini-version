@@ -1,18 +1,15 @@
-"use client"
-
-// AdminPanel.jsx
+import { ArrowLeft, Edit, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
-import ProductForm from "./ProductForm";
 import productService from "../services/productService";
+import ProductForm from "./ProductForm";
 
 const AdminPanel = ({ onBack, refreshProducts }) => {
   const [productData, setProductData] = useState({
-    name: "",
     category: "",
+    description: "",
+    name: "",
     price: "",
     unit: "",
-    description: "",
   });
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -23,43 +20,55 @@ const AdminPanel = ({ onBack, refreshProducts }) => {
   }, []);
 
   const handleAddProduct = () => {
-    setEditingProduct(null)
-    setShowForm(true)
-  }
+    setEditingProduct(null);
+    setShowForm(true);
+  };
 
   const handleEditProduct = (product) => {
-    setEditingProduct(product)
-    setShowForm(true)
-  }
+    setEditingProduct(product);
+    setShowForm(true);
+  };
 
   const handleDeleteProduct = async (product) => {
     if (window.confirm(`"${product.name}" mahsulotini o'chirishni xohlaysizmi?`)) {
-      await productService.deleteProduct(product.id)
-      refreshProducts()
+      await productService.deleteProduct(product.id);
+      refreshProducts();
     }
-  }
+  };
 
-  const handleSaveProduct = async () => {
+  const handleSaveProduct = async (data) => {
     try {
-      await productService.addProduct(productData);
+      if (!data.name || !data.category || !data.price || !data.unit) {
+        console.warn("AdminPanel: Ma'lumotlar to'liq emas:", data, new Date().toLocaleString("uz-UZ", { timeZone: "Asia/Tashkent" }));
+        return;
+      }
+      const dataToSend = {
+        category: data.category,
+        description: data.description || "",
+        name: data.name,
+        price: data.price,
+        unit: data.unit,
+      };
+      await productService.addProduct(dataToSend);
       if (refreshProducts) refreshProducts();
-      setProductData({ name: "", category: "", price: "", unit: "", description: "" });
+      setShowForm(false);
+      setEditingProduct(null);
     } catch (error) {
-      console.error("Mahsulot saqlashda xato:", error);
+      console.error("AdminPanel: Mahsulot saqlashda xato:", error, new Date().toLocaleString("uz-UZ", { timeZone: "Asia/Tashkent" }));
     }
   };
 
   const handleCancelForm = () => {
-    setShowForm(false)
-    setEditingProduct(null)
-  }
+    setShowForm(false);
+    setEditingProduct(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
+            <div className="flex items-center gap-4 mb-4 sm:mb-0">
               <button
                 onClick={onBack}
                 className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 flex items-center gap-2"
@@ -71,13 +80,12 @@ const AdminPanel = ({ onBack, refreshProducts }) => {
             </div>
             <button
               onClick={handleAddProduct}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
+              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 flex items-center gap-2 w-full sm:w-auto"
             >
               <Plus size={16} />
               Yangi mahsulot
             </button>
           </div>
-
           <div className="text-center mb-4">
             <p className="text-gray-600">Jami mahsulotlar: {products.length}</p>
           </div>
@@ -132,7 +140,7 @@ const AdminPanel = ({ onBack, refreshProducts }) => {
 
       {showForm && <ProductForm product={editingProduct} onSave={handleSaveProduct} onCancel={handleCancelForm} />}
     </div>
-  )
-}
+  );
+};
 
-export default AdminPanel
+export default AdminPanel;
